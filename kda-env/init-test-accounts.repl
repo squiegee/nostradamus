@@ -1,0 +1,16 @@
+(env-enable-repl-natives true)
+
+(begin-tx)
+(load "./bootstrap-modules/repl-coin-tools.pact")
+(commit-tx)
+
+
+(begin-tx)
+(use repl-coin-tools)
+(fund-accounts ["bob", "carol", "dave"] 10000000000.0)
+;  (fund-accounts ["BURN_ACCOUNT", "FEES"] 100.0)
+(fund-account "alice" "alice" 1000.0)
+
+(commit-tx)
+
+(env-enable-repl-natives false)
