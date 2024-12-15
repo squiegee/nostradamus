@@ -1,0 +1,31 @@
+(env-exec-config ["DisablePact44"])
+
+(begin-tx "Load in Dex code")
+(begin-tx)
+(env-data
+    { 'kaddex-ns-user: ["kaddex-user"]
+    , 'kaddex-ns-admin: ["kaddex-admin"]
+    , 'kaddex-exchange-admin: ["kaddex-admin"]
+    , 'kaddex-exchange-ops: ["kaddex-ops"]
+    , 'ns: "kaddex"
+    , 'upgrade: 0
+    , 'initial-lock: false
+    })
+  (define-keyset 'kaddex-exchange-admin)
+  (define-keyset 'kaddex-exchange-ops)
+  (env-keys ["operate", "kaddex-user", "kaddex-admin"])
+
+  (load "./kadenaswap/fungible-util.pact")
+  (load "./kadenaswap/swap-callable.pact")
+
+  (load "./kadenaswap/tokens.pact")
+
+(load "./kadenaswap/exchange.pact")
+(env-dynref fungible-v2 coin)
+(env-dynref kaddex.swap-callable-v1 kaddex.noop-callable)
+;(verify "kaddex.exchange")
+
+(env-data { 'ns: "kaddex", 'upgrade: false })
+(load "./kadenaswap/test/ABC.pact")
+(load "./kadenaswap/test/XYZ.pact")
+(commit-tx)

@@ -1,0 +1,505 @@
+(load "./kda-env/init.repl")
+(load "./loaddex.repl")
+
+(begin-tx)
+(env-data { 'ns: 'test })
+(env-data { "k:emily" : ["emily"], "admin-kadena-stake": ["keys2"], "k:stuart": ["stuart"], "k:doug": ["doug"], "k:kitty": ["kitty"], "prev-block-hash": "lPqiP54vy_E3rAkvgQVme2FreVXpVhOV3dIJYENZ2Zk" })
+(env-keys ["emily", "keys2", "stuart", "doug", "kitty"])
+(define-namespace 'test (read-keyset "k:emily") (read-keyset "k:emily"))
+(namespace 'test)
+(commit-tx)
+
+;/////////////////////////////
+;Create test coin accounts
+;//////////////////////////////
+
+(begin-tx)
+(use coin)
+
+(env-gas 0) (env-gaslog)
+(create-account "k:emily" (read-keyset "k:emily"))
+(create-account 'admin-kadena-stake (read-keyset 'admin-kadena-stake))
+(create-account "k:stuart" (read-keyset "k:stuart"))
+(create-account "k:doug" (read-keyset "k:doug"))
+(create-account "k:kitty" (read-keyset "k:kitty"))
+(commit-tx)
+
+;///////////////////////////////
+;Credit test accounts test KDA
+;////////////////////////////////
+(begin-tx)
+(use coin)
+(test-capability (DEBIT "k:emily"))
+
+;; credit tests
+(test-capability (CREDIT "k:emily"))
+(credit "k:emily" (read-keyset "k:emily") 1000.0)
+
+(test-capability (CREDIT "k:kitty"))
+(credit "k:kitty" (read-keyset "k:kitty") 1000.0)
+
+(test-capability (CREDIT "k:doug"))
+(credit "k:doug" (read-keyset "k:doug") 1000.0)
+(expect
+  "account balance reflects credit"
+  1000.0
+  (get-balance "k:emily"))
+
+(test-capability (CREDIT "admin-kadena-stake"))
+(credit 'admin-kadena-stake (read-keyset 'admin-kadena-stake) 1000.0)
+(expect
+  "account balance reflects credit"
+  1000.0
+  (get-balance 'admin-kadena-stake))
+
+(test-capability (CREDIT "k:stuart"))
+(credit "k:stuart" (read-keyset "k:stuart") 1000.0)
+(expect
+  "account balance reflects credit"
+  1000.0
+  (get-balance "k:stuart"))
+(commit-tx)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;DEFINE ACCOUNTS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(begin-tx)
+(env-data { "k:emily" : ["emily"], "admin-kadena-stake": ["keys2"], "k:stuart": ["stuart"], "k:doug": ["doug"], "k:kitty": ["kitty"], "prev-block-hash": "lPqiP54vy_E3rAkvgQVme2FreVXpVhOV3dIJYENZ2Zk" })
+(env-keys ["emily", "keys2", "stuart", "doug", "kitty"])
+(env-data { 'ns: 'test })
+(env-data { "k:emily" : ["emily"], "admin-kadena-stake": ["keys2"], "k:stuart": ["stuart"], "k:doug": ["doug"], "k:kitty": ["kitty"], "prev-block-hash": "lPqiP54vy_E3rAkvgQVme2FreVXpVhOV3dIJYENZ2Zk" })
+(env-keys ["emily", "keys2", "stuart", "doug", "kitty"])
+(define-keyset "test.emily" (read-keyset "k:emily"))
+(define-keyset "test.doug" (read-keyset "k:doug"))
+(define-keyset "test.admin-kadena-stake" (read-keyset "admin-kadena-stake"))
+(define-keyset "test.stuart" (read-keyset "k:stuart"))
+(define-keyset "test.kitty" (read-keyset "k:kitty"))
+(commit-tx)
+
+
+
+; ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⣀⣀⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+;⠀⠀⠀⠀⠀⠀⠀⠀⣀⣴⠾⠛⠋⠉⠉⠉⠉⢙⣿⣶⣤⡀⠀⠀⠀⠀⠀⠀⠀⠀
+;⠀⠀⠀⠀⠀⠀⢀⣼⠟⠁⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣦⡀⠀⠀⠀⠀⠀⠀
+;⠀⠀⠀⠀⠀⢠⣿⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⡟⣷⡀⠀⠀⠀⠀⠀
+;⠀⠀⠀⠀⠀⣾⢇⣤⣶⣶⣦⣤⣀⠀⠀⠀⠀⠀⠀⠙⠛⠛⠁⢹⣇⠀⠀⠀⠀⠀
+;⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⣿⣿⣷⣤⡀⠀⠀⠀⠀⠀⠀⠀⢸⣿⠀⠀⠀⠀⠀
+;⠀⠀⠀⠀⠀⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⡄⠀⠀⠀⠀⠀⠀⢸⡏⠀⠀⠀⠀⠀
+;⠀⠀⠀⠀⠀⠘⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡀⠀⠀⠀⠀⢠⡿⠁⠀⠀⠀⠀⠀
+;⠀⠀⠀⠀⠀⠀⠈⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠇⠀⠀⢀⣴⠟⠁⠀⠀⠀⠀⠀⠀
+;⠀⠀⠀⠀⠀⠀⣠⣤⡙⠻⢿⣿⣿⣿⣿⣿⣋⣠⣤⡶⠟⢁⣤⡄⠀⠀⠀⠀⠀⠀
+;⠀⠀⠀⠀⠀⠀⢿⣿⣿⣷⣤⣈⣉⠉⠛⠛⠉⣉⣠⣤⣾⣿⣿⡟⠀⠀⠀⠀⠀⠀
+;⠀⠀⠀⠀⣾⣦⣀⠙⠻⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠟⢋⣠⣴⣷⠀⠀⠀⠀
+;⠀⠀⠀⠀⢿⣿⣿⣿⣷⣶⣤⣬⣭⣉⣉⣉⣩⣭⣥⣤⣶⣾⣿⣿⣿⡿⠀⠀⠀⠀
+;⠀⠀⠀⠀⠀⠙⠻⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠟⠋⠀⠀⠀⠀⠀
+;⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠉⠛⠛⠛⠛⠛⠛⠛⠋⠉⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀
+;Nostradamus Prediction / Betting Platform
+;Simple 2 option betting contract v1.0
+;Users bet over events created and concluded by admins
+;Each event has 2 options users can bet over
+;Winners win back their original bet and their proportional share of the losers pot
+;5% of winnings go to the nostradamus treasury
+;Created by squiegee
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;NOSTRADAMUS TESTING BEGINS HERE
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;Load Nostradamus Contract + Create Tables
+(begin-tx)
+;(define-namespace 'test (sig-keyset) (sig-keyset))
+
+
+(env-data { 'ns: 'test, "k:emily" : ["emily"], "admin-kadena-stake": ["keys2"], "k:stuart": ["stuart"], "k:doug": ["doug"], "k:kitty": ["kitty"], "prev-block-hash": "lPqiP54vy_E3rAkvgQVme2FreVXpVhOV3dIJYENZ2Zk" })
+(env-keys ["emily", "keys2", "stuart", "doug", "kitty"])
+(env-gas 0) (env-gaslog)
+(load "nostradamus.pact")
+(env-gaslog)
+(create-table test.nostradamus.events-table)
+(create-table test.nostradamus.admins-table)
+(create-table test.nostradamus.bet-record-table)
+(create-table test.nostradamus.bank-fee-table)
+(test.nostradamus.init)
+(commit-tx)
+
+
+;///////////////////////////////////////////
+;Create event
+
+(begin-tx)
+(env-chain-data { "block-time" : (time "2024-12-13T00:00:00Z") })
+(env-gas 0) (env-gaslog)
+(test.nostradamus.create-event
+  "k:stuart"
+  "BTC over 200k by new years"
+  "Predict yes/no if BTC is 200k or more by new years 2025"
+  "Yes"
+  "No"
+  "image1"
+  "image2"
+  ["If btc >= 200k by 1/1/2025 Yes wins"]
+  (time "2025-01-01T00:00:00Z")
+  coin)
+(env-gaslog)
+(commit-tx)
+;Correct the event is created
+
+;/////////////////////////////////
+
+;Test getters
+(begin-tx)
+(env-chain-data { "block-time" : (time "2024-12-14T00:00:00Z") })
+(env-gas 0) (env-gaslog)
+(test.nostradamus.get-all-events)
+(test.nostradamus.get-event "wChHZR1kNCi8CXIEjzULrPj4qg1X1PAgx8jRt_cFNEE")
+(env-gaslog)
+(commit-tx)
+
+;/////////////////////////////////
+
+;Test place-bet yes with k:kitty and 6.0 kda
+(begin-tx)
+(env-chain-data { "block-time" : (time "2024-12-14T00:00:00Z") })
+
+(test-capability  (coin.TRANSFER "k:kitty" "u:test.nostradamus.enforce-private-reserve:K33VeQKlu3DEbfv_KxOgf0MdgFg024RkXhx3En1Zj2U" 6.0))
+
+(coin.get-balance "k:kitty")
+
+(test.nostradamus.get-event "wChHZR1kNCi8CXIEjzULrPj4qg1X1PAgx8jRt_cFNEE")
+
+(test.nostradamus.place-bet "k:kitty" "wChHZR1kNCi8CXIEjzULrPj4qg1X1PAgx8jRt_cFNEE" true false 6.0)
+
+(test.nostradamus.get-event "wChHZR1kNCi8CXIEjzULrPj4qg1X1PAgx8jRt_cFNEE")
+
+(coin.get-balance "k:kitty")
+(commit-tx)
+;Correct - kitty bets 6.0 kda on yes
+
+;/////////////////////////////////
+
+;Test place-bet no with k:emily and 3.0 kda
+(begin-tx)
+(env-chain-data { "block-time" : (time "2024-12-15T00:00:00Z") })
+(test-capability  (coin.TRANSFER "k:emily" "u:test.nostradamus.enforce-private-reserve:K33VeQKlu3DEbfv_KxOgf0MdgFg024RkXhx3En1Zj2U" 3.0))
+
+(coin.get-balance "k:emily")
+
+(test.nostradamus.get-event "wChHZR1kNCi8CXIEjzULrPj4qg1X1PAgx8jRt_cFNEE")
+
+(test.nostradamus.place-bet "k:emily" "wChHZR1kNCi8CXIEjzULrPj4qg1X1PAgx8jRt_cFNEE" false true 3.0)
+
+(test.nostradamus.get-event "wChHZR1kNCi8CXIEjzULrPj4qg1X1PAgx8jRt_cFNEE")
+
+(coin.get-balance "k:emily")
+
+(commit-tx)
+;Correct - emily bets 3.0 kda on yes
+
+;/////////////////////////////////
+
+;Test conclude event
+(begin-tx)
+(env-chain-data { "block-time" : (time "2024-12-16T00:00:00Z") })
+(test.nostradamus.conclude-event "k:stuart" "wChHZR1kNCi8CXIEjzULrPj4qg1X1PAgx8jRt_cFNEE" true false "btc hit 200k on 12-16-25")
+(commit-tx)
+;Correct - k:stuart concludes the event
+
+;/////////////////////////////////
+
+;Test claim winnings with k:kitty
+(begin-tx)
+(env-chain-data { "block-time" : (time "2024-12-17T00:00:00Z") })
+
+(coin.get-balance "k:kitty")
+(coin.get-balance "u:test.nostradamus.enforce-private-reserve:K33VeQKlu3DEbfv_KxOgf0MdgFg024RkXhx3En1Zj2U")
+(coin.get-balance "u:test.nostradamus.enforce-private-reserve:f2E9gqfv4N6SseE_ZGgUMqzjnMI9pXmuqJk4Td6KwOA")
+(test.nostradamus.get-treasury-account coin)
+
+(test.nostradamus.claim-winnings "k:kitty" "wChHZR1kNCi8CXIEjzULrPj4qg1X1PAgx8jRt_cFNEE")
+
+(coin.get-balance "k:kitty")
+(coin.get-balance "u:test.nostradamus.enforce-private-reserve:K33VeQKlu3DEbfv_KxOgf0MdgFg024RkXhx3En1Zj2U")
+(coin.get-balance "u:test.nostradamus.enforce-private-reserve:f2E9gqfv4N6SseE_ZGgUMqzjnMI9pXmuqJk4Td6KwOA")
+(commit-tx)
+;Correct kitty claims winnings and fees are subtracted to treasury correctly
+
+;/////////////////////////////////
+
+;Test claim winnings with loser emily - this shouldnt work
+(begin-tx)
+(env-chain-data { "block-time" : (time "2024-12-18T00:00:00Z") })
+(coin.get-balance "k:emily")
+
+(test.nostradamus.claim-winnings "k:emily" "wChHZR1kNCi8CXIEjzULrPj4qg1X1PAgx8jRt_cFNEE")
+
+(coin.get-balance "k:emily")
+(commit-tx)
+;Correct- emily lost the bet and so she cant claim any winnings
+
+;/////////////////////////////////
+
+;Test claim winnings AGAIN with k:kitty - this hsould fail because kitty already claimed his winnings
+(begin-tx)
+(env-chain-data { "block-time" : (time "2024-12-19T00:00:00Z") })
+(coin.get-balance "k:kitty")
+(expect-failure "You have already claimed your winnings." "You have already claimed your winnings."
+(test.nostradamus.claim-winnings "k:kitty" "wChHZR1kNCi8CXIEjzULrPj4qg1X1PAgx8jRt_cFNEE")
+)
+(coin.get-balance "k:kitty")
+(commit-tx)
+;Correct - kitty cannot claim winnings twice
+
+;/////////////////////////////////
+
+;Test withdraw treasury
+(begin-tx)
+(env-chain-data { "block-time" : (time "2024-12-20T00:00:00Z") })
+(coin.get-balance "k:stuart")
+
+(test.nostradamus.get-treasury-account coin)
+
+(test.nostradamus.withdraw-treasury "k:stuart" coin 0.45)
+
+(test.nostradamus.get-treasury-account coin)
+
+(coin.get-balance "k:stuart")
+(commit-tx)
+;Correct- stuart withdraws treasury
+
+;//////////////////////////////////
+
+;Lets create another event with more than 2 people, to ensure math is correct
+;Lets create an event and have 4 people participate and make sure math is ok
+
+;///////////////////////////////////////////
+;Create event
+
+(begin-tx)
+(env-chain-data { "block-time" : (time "2024-12-21T00:00:00Z") })
+(env-gas 0) (env-gaslog)
+(test.nostradamus.create-event
+  "k:stuart"
+  "tyon beats jake paul"
+  "Predict yes/no if tyson wins"
+  "Yes"
+  "No"
+  "image1"
+  "image2"
+  ["If tyson wins Yes wins"]
+  (time "2025-01-01T00:00:00Z")
+  coin)
+(env-gaslog)
+(commit-tx)
+;Correct the event is created
+
+;/////////////////////////////////
+
+;Test place-bet yes with k:kitty and 6.0 kda
+(begin-tx)
+(env-chain-data { "block-time" : (time "2024-12-22T00:00:00Z") })
+
+(test-capability  (coin.TRANSFER "k:kitty" "u:test.nostradamus.enforce-private-reserve:RkO0bXJolaEpiiOkV4motw5WalIRKdt9r4hzUWkQRIQ" 6.0))
+
+(coin.get-balance "k:kitty")
+
+(test.nostradamus.get-event "cgczZ1IBmTiouRT4Lnq9mefuk5IEselaCgwC4uQfSAA")
+
+(test.nostradamus.place-bet "k:kitty" "cgczZ1IBmTiouRT4Lnq9mefuk5IEselaCgwC4uQfSAA" true false 6.0)
+
+(test.nostradamus.get-event "cgczZ1IBmTiouRT4Lnq9mefuk5IEselaCgwC4uQfSAA")
+
+(coin.get-balance "k:kitty")
+(commit-tx)
+;Correct - kitty bets 6.0 kda on yes
+
+;/////////////////////////////////
+
+;/////////////////////////////////
+
+;Test place-bet yes with k:stuart and 9.0 kda
+(begin-tx)
+(env-chain-data { "block-time" : (time "2024-12-23T00:00:00Z") })
+
+(test-capability  (coin.TRANSFER "k:stuart" "u:test.nostradamus.enforce-private-reserve:RkO0bXJolaEpiiOkV4motw5WalIRKdt9r4hzUWkQRIQ" 10.0))
+
+(coin.get-balance "k:stuart")
+
+(test.nostradamus.get-event "cgczZ1IBmTiouRT4Lnq9mefuk5IEselaCgwC4uQfSAA")
+
+(test.nostradamus.place-bet "k:stuart" "cgczZ1IBmTiouRT4Lnq9mefuk5IEselaCgwC4uQfSAA" true false 9.0)
+
+(test.nostradamus.get-event "cgczZ1IBmTiouRT4Lnq9mefuk5IEselaCgwC4uQfSAA")
+
+(coin.get-balance "k:kitty")
+(commit-tx)
+;Correct - kitty bets 9.0 kda on yes
+
+;/////////////////////////////////
+
+;Test place-bet no with k:emily and 5.0 kda
+(begin-tx)
+(env-chain-data { "block-time" : (time "2024-12-24T00:00:00Z") })
+
+(test-capability  (coin.TRANSFER "k:emily" "u:test.nostradamus.enforce-private-reserve:RkO0bXJolaEpiiOkV4motw5WalIRKdt9r4hzUWkQRIQ" 5.0))
+
+(coin.get-balance "k:emily")
+
+(test.nostradamus.get-event "cgczZ1IBmTiouRT4Lnq9mefuk5IEselaCgwC4uQfSAA")
+
+(test.nostradamus.place-bet "k:emily" "cgczZ1IBmTiouRT4Lnq9mefuk5IEselaCgwC4uQfSAA" false true 5.0)
+
+(test.nostradamus.get-event "cgczZ1IBmTiouRT4Lnq9mefuk5IEselaCgwC4uQfSAA")
+
+(coin.get-balance "k:emily")
+(commit-tx)
+;Correct - emily bets 5.0 kda on no
+
+;/////////////////////////////////
+
+;Test place-bet no with k:doug and 7.0 kda
+(begin-tx)
+(env-chain-data { "block-time" : (time "2024-12-25T00:00:00Z") })
+
+(test-capability  (coin.TRANSFER "k:doug" "u:test.nostradamus.enforce-private-reserve:RkO0bXJolaEpiiOkV4motw5WalIRKdt9r4hzUWkQRIQ" 7.0))
+
+(coin.get-balance "k:doug")
+
+(test.nostradamus.get-event "cgczZ1IBmTiouRT4Lnq9mefuk5IEselaCgwC4uQfSAA")
+
+(test.nostradamus.place-bet "k:doug" "cgczZ1IBmTiouRT4Lnq9mefuk5IEselaCgwC4uQfSAA" false true 7.0)
+
+(test.nostradamus.get-event "cgczZ1IBmTiouRT4Lnq9mefuk5IEselaCgwC4uQfSAA")
+
+(coin.get-balance "k:doug")
+(commit-tx)
+;Correct - doug bets 7.0 kda on no
+
+;/////////////////////////////////
+
+;Test conclude event
+(begin-tx)
+(env-chain-data { "block-time" : (time "2024-12-26T00:00:00Z") })
+(test.nostradamus.conclude-event "k:stuart" "cgczZ1IBmTiouRT4Lnq9mefuk5IEselaCgwC4uQfSAA" true false "tyon wins")
+(commit-tx)
+;Correct - k:stuart concludes the event
+
+;/////////////////////////////////
+
+;Test claim winnings with k:kitty
+(begin-tx)
+(env-chain-data { "block-time" : (time "2024-12-27T00:00:00Z") })
+
+(coin.get-balance "k:kitty")
+(coin.get-balance "u:test.nostradamus.enforce-private-reserve:RkO0bXJolaEpiiOkV4motw5WalIRKdt9r4hzUWkQRIQ")
+(coin.get-balance "u:test.nostradamus.enforce-private-reserve:f2E9gqfv4N6SseE_ZGgUMqzjnMI9pXmuqJk4Td6KwOA")
+(test.nostradamus.get-treasury-account coin)
+
+(test.nostradamus.claim-winnings "k:kitty" "cgczZ1IBmTiouRT4Lnq9mefuk5IEselaCgwC4uQfSAA")
+
+(coin.get-balance "k:kitty")
+(coin.get-balance "u:test.nostradamus.enforce-private-reserve:RkO0bXJolaEpiiOkV4motw5WalIRKdt9r4hzUWkQRIQ")
+(coin.get-balance "u:test.nostradamus.enforce-private-reserve:f2E9gqfv4N6SseE_ZGgUMqzjnMI9pXmuqJk4Td6KwOA")
+(commit-tx)
+;Correct kitty claims winnings and fees are subtracted to treasury correctly
+
+;/////////////////////////////////
+
+;Test claim winnings with k:stuart
+(begin-tx)
+(env-chain-data { "block-time" : (time "2024-12-28T00:00:00Z") })
+
+(coin.get-balance "k:stuart")
+(coin.get-balance "u:test.nostradamus.enforce-private-reserve:RkO0bXJolaEpiiOkV4motw5WalIRKdt9r4hzUWkQRIQ")
+(coin.get-balance "u:test.nostradamus.enforce-private-reserve:f2E9gqfv4N6SseE_ZGgUMqzjnMI9pXmuqJk4Td6KwOA")
+(test.nostradamus.get-treasury-account coin)
+
+(test.nostradamus.claim-winnings "k:stuart" "cgczZ1IBmTiouRT4Lnq9mefuk5IEselaCgwC4uQfSAA")
+
+(coin.get-balance "k:stuart")
+(coin.get-balance "u:test.nostradamus.enforce-private-reserve:RkO0bXJolaEpiiOkV4motw5WalIRKdt9r4hzUWkQRIQ")
+(coin.get-balance "u:test.nostradamus.enforce-private-reserve:f2E9gqfv4N6SseE_ZGgUMqzjnMI9pXmuqJk4Td6KwOA")
+
+(test.nostradamus.get-all-events)
+(test.nostradamus.get-user-events "k:kitty")
+(commit-tx)
+;Correct kitty claims winnings and fees are subtracted to treasury correctly
+
+;/////////////////////////////////
+;//////////////////////////////////
+
+;Lets create another event with and try to break things
+;Lets create an event where only 1 person bets
+;This means that 1 person will win nothing
+;Lets maket his event and make sure the game doesnt crash
+
+;///////////////////////////////////////////
+;Create event
+
+(begin-tx)
+(env-chain-data { "block-time" : (time "2025-01-01T00:00:00Z") })
+(env-gas 0) (env-gaslog)
+(test.nostradamus.create-event
+  "k:stuart"
+  "bet this event breaks nostradamus"
+  "Predict yes/no if this will break the game"
+  "Yes"
+  "No"
+  "image1"
+  "image2"
+  ["If nostradamus breaks, Yes wins"]
+  (time "2025-01-10T00:00:00Z")
+  coin)
+(env-gaslog)
+(commit-tx)
+;Correct the event is created
+
+;/////////////////////////////////
+
+;Test place-bet yes with k:kitty and 6.0 kda
+(begin-tx)
+(env-chain-data { "block-time" : (time "2025-01-02T00:00:00Z") })
+
+(test.nostradamus.get-all-events)
+
+(test-capability  (coin.TRANSFER "k:kitty" "u:test.nostradamus.enforce-private-reserve:1IyZsjOmPxQ7PtOStdqyeL5Dx2x7d0AtGQdunA9b3bk" 6.0))
+
+(coin.get-balance "k:kitty")
+
+(test.nostradamus.get-event "7SBB8QXdjXSu-NX_ToV7cwfg2p4PiAzUSbqeogokodU")
+
+(test.nostradamus.place-bet "k:kitty" "7SBB8QXdjXSu-NX_ToV7cwfg2p4PiAzUSbqeogokodU" true false 6.0)
+
+(test.nostradamus.get-event "7SBB8QXdjXSu-NX_ToV7cwfg2p4PiAzUSbqeogokodU")
+
+(coin.get-balance "k:kitty")
+(commit-tx)
+;Correct - kitty bets 6.0 kda on yes
+
+;/////////////////////////////////
+
+;Test conclude event
+(begin-tx)
+(env-chain-data { "block-time" : (time "2025-01-02T00:00:00Z") })
+(test.nostradamus.conclude-event "k:stuart" "7SBB8QXdjXSu-NX_ToV7cwfg2p4PiAzUSbqeogokodU" true false "nostradamus broke! yes wins")
+(commit-tx)
+;Correct - k:stuart concludes the event
+
+;/////////////////////////////////
+
+;Test claim winnings with k:kitty
+(begin-tx)
+(env-chain-data { "block-time" : (time "2025-01-03T00:00:00Z") })
+
+(coin.get-balance "k:kitty")
+(coin.get-balance "u:test.nostradamus.enforce-private-reserve:1IyZsjOmPxQ7PtOStdqyeL5Dx2x7d0AtGQdunA9b3bk")
+(test.nostradamus.get-treasury-account coin)
+
+(test.nostradamus.claim-winnings "k:kitty" "7SBB8QXdjXSu-NX_ToV7cwfg2p4PiAzUSbqeogokodU")
+
+(coin.get-balance "k:kitty")
+(coin.get-balance "u:test.nostradamus.enforce-private-reserve:1IyZsjOmPxQ7PtOStdqyeL5Dx2x7d0AtGQdunA9b3bk")
+(commit-tx)
+;Correct kitty claims winnings and since noone else bet against him, the game returned his original bet
+
+;/////////////////////////////////
