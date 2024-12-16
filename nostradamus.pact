@@ -66,18 +66,20 @@
       @event true
     )
 
-    (defcap NOSTRADAMUS_EVENT_CONCLUDED (event_id:string side_1_wins:bool side_2_wins:bool)
+    (defcap NOSTRADAMUS_NEW_BET (event_id:string event_title:string prediction:string amount:decimal token:module{fungible-v2})
+      @doc " Someone just made a new prediction "
+      @event true
+    )
+
+
+
+    (defcap NOSTRADAMUS_EVENT_ENDED (event_id:string side_1_wins:bool side_2_wins:bool)
       @doc " An event has concluded "
       @event true
     )
 
     (defcap NOSTRADAMUS_WINNINGS_CLAIMED (event_id:string account_id:string token:module{fungible-v2} amount:decimal fee:decimal)
       @doc " A winner has claimed their winnings "
-      @event true
-    )
-
-    (defcap NOSTRADAMUS_BET_PLACED (event_id:string account_id:string token:module{fungible-v2} amount:decimal)
-      @doc " A new prediction has been placed "
       @event true
     )
 
@@ -161,7 +163,7 @@
       )
     )
 
-    (defun create-treasury-account(token:module{fungible-v2})
+    (defun create-treasury-account:string(token:module{fungible-v2})
       @doc " Create a treasury account "
           (require-capability (ADD_TREASURY_ACCOUNT (get-token-key token)))
           (with-default-read bank-fee-table (get-token-key token)
@@ -181,9 +183,10 @@
                 true
               )
           )
+          (format "Created new treasury account for token {}" [token])
     )
 
-    (defun withdraw-treasury(account_id:string token:module{fungible-v2} amount:decimal)
+    (defun withdraw-treasury:string(account_id:string token:module{fungible-v2} amount:decimal)
       @doc " Withdraw treasury tokens "
           (with-capability (ACCOUNT_GUARD account_id)
             (with-capability (ADMIN_GUARD account_id)
@@ -196,6 +199,8 @@
                       "amount": (- (at "amount" (read bank-fee-table (get-token-key token))) amount)
                   }
               )
+              ;Return message
+              (format "Withdrew {} {} from treasury" [amount token])
             )
           )
     )
@@ -324,9 +329,9 @@
             )
 
             ;Emit event
-            (emit-event (NOSTRADAMUS_EVENT_CONCLUDED event_id event_side_1_wins event_side_2_wins))
+            (emit-event (NOSTRADAMUS_EVENT_ENDED event_id event_side_1_wins event_side_2_wins))
 
-            ;Return final message
+            ;Return message
             (format "Concluded event {}" [event_id])
 
           )
@@ -364,6 +369,10 @@
 
             )
 
+            ;Emit event
+            (emit-event (NOSTRADAMUS_EVENT_ENDED event_id false false))
+
+            ;Return message
             (format "Refunded event {}" [event_id])
 
           )
@@ -377,6 +386,7 @@
             (let*
                 (
                     (event-data:object{event-schema} (read events-table event_id))
+                    (event_title:string (at "event_title" event-data))
                     (event_pool:string (at "event_pool" event-data))
                     (event_token:module{fungible-v2} (at "event_token" event-data))
                     (event_end_time:time (at "event_end_time" event-data))
@@ -452,6 +462,10 @@
                                     "claimed_winnings": false
                                 }
                             )
+
+                            ;Emit Event
+                            (emit-event (NOSTRADAMUS_NEW_BET event_id event_title event_side_1_name amount event_token))
+
                             ]
                             true
                   )
@@ -500,21 +514,24 @@
                                 }
                             )
 
+                            ;Emit Event
+                            (emit-event (NOSTRADAMUS_NEW_BET event_id event_title event_side_2_name amount event_token))
+
                             ]
                             true
                   )
 
                 )
 
-                ;Emit event
-                (emit-event (NOSTRADAMUS_BET_PLACED event_id account_id event_token amount))
-
                 ;Return message depending on side purchased
                 (if (= side_1 true)
                         (format "Purchased {} {} for event {}" [amount event_side_1_name event_id])
                         (format "Purchased {} {} for event {}" [amount event_side_2_name event_id])
                 )
+
             )
+
+
         )
     )
 
@@ -575,6 +592,8 @@
                               ;Transfer winnings back to user
                               (install-capability (event_token::TRANSFER event_pool account_id user_total_pay_side_1))
                               (with-capability (PRIVATE_RESERVE event_id (get-token-key event_token)) (event_token::transfer event_pool account_id user_total_pay_side_1))
+
+                              (emit-event (NOSTRADAMUS_WINNINGS_CLAIMED event_id account_id event_token user_total_pay_side_1 fee_1))
                           )
                         ]
                         [
@@ -582,6 +601,9 @@
                           ;Lets transfer back the users original bet since they havent won anything from the losers
                           (install-capability (event_token::TRANSFER event_pool account_id user_side_1_amount))
                           (with-capability (PRIVATE_RESERVE event_id (get-token-key event_token)) (event_token::transfer event_pool account_id user_side_1_amount))
+
+                          ;Emit event
+                          (emit-event (NOSTRADAMUS_WINNINGS_CLAIMED event_id account_id event_token user_side_1_amount 0.0))
                         ]
                       )
                     ]
@@ -617,6 +639,9 @@
                               (install-capability (event_token::TRANSFER event_pool account_id user_total_pay_side_2))
                               (with-capability (PRIVATE_RESERVE event_id (get-token-key event_token)) (event_token::transfer event_pool account_id user_total_pay_side_2))
 
+                              ;Emit event
+                              (emit-event (NOSTRADAMUS_WINNINGS_CLAIMED event_id account_id event_token user_total_pay_side_2 fee_2))
+
                           )
                         ]
                         [
@@ -624,6 +649,9 @@
                           ;Lets transfer back the users original bet since they havent won anything from the losers
                           (install-capability (event_token::TRANSFER event_pool account_id user_side_2_amount))
                           (with-capability (PRIVATE_RESERVE event_id (get-token-key event_token)) (event_token::transfer event_pool account_id user_side_2_amount))
+
+                          ;Emit event
+                          (emit-event (NOSTRADAMUS_WINNINGS_CLAIMED event_id account_id event_token user_side_2_amount 0.0))
                         ]
                       )
                     ]
@@ -653,12 +681,12 @@
                                 (_fee_2:decimal (floor (* _user_total_pay_side_2_no_fee 0.05) (event_token::precision)))
                                 (_user_total_pay_side_2:decimal (floor (- _user_total_pay_side_2_no_fee _fee_2) (event_token::precision) ))
                               )
-                              (emit-event (NOSTRADAMUS_WINNINGS_CLAIMED event_id account_id event_token _user_total_pay_side_2 _fee_2))
+
                               (format "Claimed {} {} (fee {}) for winning event {}" [_user_total_pay_side_2 event_token _fee_2 event_id])
 
                           )
-                          (emit-event (NOSTRADAMUS_WINNINGS_CLAIMED event_id account_id event_token user_side_2_amount 0.0))
-                          (format "Returned {} {} because noone else bet against you on event {}" [user_side_2_amount event_token event_id])
+
+                        (format "Returned {} {} because noone else bet against you on event {}" [user_side_2_amount event_token event_id])
                       )
 
 
@@ -674,12 +702,13 @@
                                   (_fee_1:decimal (floor (* _user_total_pay_side_1_no_fee 0.05) (event_token::precision)))
                                   (_user_total_pay_side_1:decimal (floor (- _user_total_pay_side_1_no_fee _fee_1) (event_token::precision) ))
                                 )
-                                (emit-event (NOSTRADAMUS_WINNINGS_CLAIMED event_id account_id event_token _user_total_pay_side_1 _fee_1))
                                 (format "Claimed {} {} (fee {}) for winning event {}" [_user_total_pay_side_1  event_token _fee_1 event_id])
                             )
-                            (emit-event (NOSTRADAMUS_WINNINGS_CLAIMED event_id account_id event_token user_side_1_amount 0.0))
-                            (format "Returned {} {} because noone else bet against you on event {}" [user_side_1_amount event_token event_id])
+
+                          (format "Returned {} {} because noone else bet against you on event {}" [user_side_1_amount event_token event_id])
                         )
+
+
                       (format "No winnings claimed from event {}" [event_id])
                     )
                 )
