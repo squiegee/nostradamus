@@ -71,8 +71,6 @@
       @event true
     )
 
-
-
     (defcap NOSTRADAMUS_EVENT_ENDED (event_id:string side_1_wins:bool side_2_wins:bool)
       @doc " An event has concluded "
       @event true
@@ -82,8 +80,6 @@
       @doc " A winner has claimed their winnings "
       @event true
     )
-
-
 
     ;;;;;;;;;; GUARDS ;;;;;;;;;;;;;;
 
@@ -146,14 +142,12 @@
       event_id:string
       claimed_winnings:bool)
 
-
     ;;;;;;;;;;TABLES;;;;;;;;;;
 
     (deftable events-table:{event-schema})
     (deftable admins-table:{admins-schema})
     (deftable bet-record-table:{bet-record-schema})
     (deftable bank-fee-table:{fee-bank-schema})
-
 
     ;;;;;;;;;;;FUNCTIONS;;;;;
 
@@ -785,7 +779,6 @@
         )
     )
 
-
     ;;///////////////////////
     ;;GETTERS
     ;;//////////////////////
@@ -804,7 +797,7 @@
     @doc " Get event with user betting records "
       (+
         (read events-table event_id)
-        (read bet-record-table (get-2-key event_id account_id))
+        (try {} (read bet-record-table (get-2-key event_id account_id)))
       )
     )
 
@@ -843,6 +836,15 @@
         )
     )
 
+    (defun is-admin:bool(account:string)
+        (let*
+            (
+              (admins_data (read admins-table "ADMINS"))
+              (admin_ids (at "admin_ids" admins_data))
+            )
+            (contains account admin_ids)
+        )
+    )
 
     ;;///////////////////////
     ;;UTILITIES
