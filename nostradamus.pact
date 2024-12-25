@@ -837,6 +837,7 @@
     )
 
     (defun is-admin:bool(account:string)
+    @doc " Check if an account is an admin "
         (let*
             (
               (admins_data (read admins-table "ADMINS"))
@@ -844,6 +845,65 @@
             )
             (contains account admin_ids)
         )
+    )
+
+    (defun get-winnings:decimal
+      (account_id:string event_id:string side_1_wins:bool side_2_wins:bool)
+      @doc " Calculate an accounts winnings for an event "
+            (let*
+                (
+                    (event-data:object{event-schema} (read events-table event_id))
+                    (event_token:module{fungible-v2} (at "event_token" event-data))
+                    (event_side_1_amount:decimal (at "event_side_1_amount" event-data))
+                    (event_side_2_amount:decimal (at "event_side_2_amount" event-data))
+                    (bet-record-data:object{bet-record-schema} (read bet-record-table (get-2-key event_id account_id)))
+                    (user_claimed_winnings:bool (at "claimed_winnings" bet-record-data))
+                    (user_side_1_amount:decimal (at "side_1_amount" bet-record-data))
+                    (user_side_2_amount:decimal (at "side_2_amount" bet-record-data))
+                    (user_total_amount:decimal (at "total_amount" bet-record-data))
+                )
+                (if  (and (= side_2_wins true) (> user_side_2_amount 0.0) )
+
+                    (if (> event_side_1_amount 0.0)
+
+                        (let*
+                            (
+                              (_user_share_side_2:decimal (/ user_side_2_amount event_side_2_amount))
+                              (_user_winnings_side_1:decimal (floor (* event_side_1_amount _user_share_side_2) (event_token::precision) ))
+                              (_user_total_pay_side_2_no_fee:decimal (floor (+ user_side_2_amount _user_winnings_side_1) (event_token::precision) ))
+                              (_fee_2:decimal (floor (* _user_total_pay_side_2_no_fee 0.05) (event_token::precision)))
+                              (_user_total_pay_side_2:decimal (floor (- _user_total_pay_side_2_no_fee _fee_2) (event_token::precision) ))
+                            )
+
+                            _user_total_pay_side_2
+
+                        )
+
+                      user_side_2_amount
+                    )
+
+                    (if  (and (= side_1_wins true) (> user_side_1_amount 0.0) )
+
+                        (if (> event_side_2_amount 0.0)
+
+                            (let*
+                                (
+                                  (_user_share_side_1:decimal (/ user_side_1_amount event_side_1_amount))
+                                  (_user_winnings_side_2:decimal (floor (* event_side_2_amount _user_share_side_1) (event_token::precision) ))
+                                  (_user_total_pay_side_1_no_fee:decimal (floor (+ user_side_1_amount _user_winnings_side_2) (event_token::precision) ))
+                                  (_fee_1:decimal (floor (* _user_total_pay_side_1_no_fee 0.05) (event_token::precision)))
+                                  (_user_total_pay_side_1:decimal (floor (- _user_total_pay_side_1_no_fee _fee_1) (event_token::precision) ))
+                                )
+                                _user_total_pay_side_1
+                            )
+
+                          user_side_1_amount
+                        )
+
+                      0.0
+                    )
+                )
+            )
     )
 
     ;;///////////////////////
