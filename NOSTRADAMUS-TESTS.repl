@@ -153,6 +153,8 @@
 (env-gas 0) (env-gaslog)
 (test.nostradamus.get-all-events)
 (test.nostradamus.get-event "wChHZR1kNCi8CXIEjzULrPj4qg1X1PAgx8jRt_cFNEE")
+(test.nostradamus.is-admin "k:stuart")
+(test.nostradamus.is-admin "k:kitty")
 (env-gaslog)
 (commit-tx)
 
@@ -310,6 +312,13 @@
 (test.nostradamus.get-event "cgczZ1IBmTiouRT4Lnq9mefuk5IEselaCgwC4uQfSAA")
 
 (coin.get-balance "k:kitty")
+
+(test.nostradamus.get-user-events "k:kitty")
+
+(test.nostradamus.get-user-events "k:emily")
+
+(test.nostradamus.get-winnings "k:kitty" "cgczZ1IBmTiouRT4Lnq9mefuk5IEselaCgwC4uQfSAA" true false)
+
 (commit-tx)
 ;Correct - kitty bets 6.0 kda on yes
 
@@ -352,6 +361,8 @@
 (test.nostradamus.get-event "cgczZ1IBmTiouRT4Lnq9mefuk5IEselaCgwC4uQfSAA")
 
 (coin.get-balance "k:emily")
+
+(test.nostradamus.get-winnings "k:kitty" "cgczZ1IBmTiouRT4Lnq9mefuk5IEselaCgwC4uQfSAA" true false)
 (commit-tx)
 ;Correct - emily bets 5.0 kda on no
 
